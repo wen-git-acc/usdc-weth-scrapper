@@ -1,0 +1,11 @@
+{
+  "BeforeTest": [
+    {
+      "TYPE": "migrate_postgres",
+      "DBName": "usdc_weth_scrapper",
+      "TestUser": "",
+      "TestPassword": "",
+      "MigrateSQLDir": "$CODE_DIR/databases/postgresql"
+    }
+  ]
+}
