@@ -25,6 +25,9 @@ class AppConfig(BaseSettings):
     postgres_pool_timeout: int = 0
     postgres_pool_recycle: int = 0
 
+    # Secret get from environment.
+    testing: str = os.environ.get("TESTING", "false")
+
     # Logging: DEBUG, INFO, WARNING, ERROR, EXCEPTION
     log_level: str = ""
 
@@ -46,22 +49,22 @@ def get_config(
     # parser will be used to contain the main overall rendered config
     parser = ConfigParser(interpolation=ExtendedInterpolation())
 
-    # read raw secret value first
-    secret_parser = ConfigParser(interpolation=ExtendedInterpolation())
-    _ = secret_parser.read(
-        [Path(secret_init_path)],
-        encoding="utf-8",
-    )
+    # # read raw secret value first
+    # secret_parser = ConfigParser(interpolation=ExtendedInterpolation())
+    # _ = secret_parser.read(
+    #     [Path(secret_init_path)],
+    #     encoding="utf-8",
+    # )
 
-    # special character $ must be escaped for use in extended interpolation later with overall config
-    secret_sections = secret_parser.sections()
-    for section in secret_sections:
-        section_items = dict(secret_parser.items(section, raw=True))
-        parser.add_section(section)
-        for key, value in section_items.items():
-            safe_value = value.replace("$", "$$")
-            # we set the safe secret value for later extended interpolation reference
-            parser.set(section, key, safe_value)
+    # # special character $ must be escaped for use in extended interpolation later with overall config
+    # secret_sections = secret_parser.sections()
+    # for section in secret_sections:
+    #     section_items = dict(secret_parser.items(section, raw=True))
+    #     parser.add_section(section)
+    #     for key, value in section_items.items():
+    #         safe_value = value.replace("$", "$$")
+    #         # we set the safe secret value for later extended interpolation reference
+    #         parser.set(section, key, safe_value)
 
     # read and render the main config
     config_paths = parser.read(
