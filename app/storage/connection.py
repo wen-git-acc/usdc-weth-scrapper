@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import Generator
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -28,6 +29,10 @@ def get_session() -> Generator[Session, None, None]:
     try:
         db.begin()
         yield db
+    except IntegrityError as e:
+        # Roll back the session to avoid any invalid state
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         error_message = "db operation failed, rollback."

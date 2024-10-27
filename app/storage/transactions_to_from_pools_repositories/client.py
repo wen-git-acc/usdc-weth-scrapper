@@ -21,8 +21,8 @@ class TransactionToFromPoolRepository:
                 return
 
             with self.__db_session() as session:
-                for embedding in data:
-                    session.add(embedding)
+                for transaction in data:
+                    session.add(transaction)
                 session.commit()
         except Exception as e:
             description = "Insert transaction to from pool data failed"

@@ -8,27 +8,27 @@ class TransactionToFromPool(Base):
     __tablename__ = 'transactions_to_from_pools'
     
     transaction_id = Column(Integer, primary_key=True, autoincrement=True)
-    block_number = Column(BigInteger, nullable=False)
-    ts_timestamp = Column(TIMESTAMP(timezone=True), nullable=False)
-    tx_hash = Column(String(66), unique=True, nullable=False)  # 66 characters for tx hashes with '0x' prefix
-    from_address = Column(String(42), nullable=False)
-    to_address = Column(String(42), nullable=False)
-    contract_address = Column(String(42), nullable=False)
-    token_value = Column(Numeric(38, 0), nullable=False)  # 38 digits for high precision token values
-    token_name = Column(String(50))
-    token_symbol = Column(String(20))
-    token_decimal = Column(Integer)  # Changed to Integer for better compatibility
-    transaction_index = Column(Integer, nullable=False)
-    gas_limit = Column(BigInteger, nullable=False)  # Original gas limit provided by the sender
-    gas_price = Column(BigInteger, nullable=False)  # Gas price in wei
-    gas_used = Column(BigInteger, nullable=False)  # Actual gas used
-    cumulative_gas_used = Column(BigInteger)
-    confirmations = Column(Integer)
-    transaction_fee_usdt = Column(Numeric(38, 18))
+    block_number = Column(String, nullable=False)
+    ts_timestamp = Column(String, nullable=False)
+    tx_hash = Column(String, unique=True, nullable=False)
+    from_address = Column(String, nullable=False)
+    to_address = Column(String, nullable=False)
+    contract_address = Column(String, nullable=False)
+    token_value = Column(String, nullable=False)
+    token_name = Column(String)
+    token_symbol = Column(String)
+    token_decimal = Column(String)
+    transaction_index = Column(String, nullable=False)
+    gas_limit = Column(String, nullable=False)
+    gas_price = Column(String, nullable=False)
+    gas_used = Column(String, nullable=False)
+    cumulative_gas_used = Column(String)
+    confirmations = Column(String)
+    transaction_fee_usdt = Column(String)
     pool_id = Column(Integer, ForeignKey('token_pair_pools.pool_id'), nullable=True)
 
     # Relationship to token pair pool
-    pool = relationship("TokenPairPool", back_populates="transactions")
+    # pool = relationship("TokenPairPool", back_populates="transactions")
 
     def __repr__(self):
         return (f"<TransactionToFromPool(transaction_id={self.transaction_id}, "

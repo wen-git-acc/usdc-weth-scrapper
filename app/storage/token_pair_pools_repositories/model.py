@@ -10,6 +10,3 @@ class TokenPairPool(Base):
     pool_id = Column(Integer, primary_key=True, autoincrement=True)
     pool_name = Column(String(255), unique=True, nullable=False)
     contract_address = Column(String(42), unique=True, nullable=False)
-
-    # Relationship to transactions
-    transactions = relationship("TransactionToFromPool", back_populates="pool")

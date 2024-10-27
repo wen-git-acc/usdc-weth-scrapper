@@ -1,21 +1,86 @@
+from re import A
 from time import sleep
+from tracemalloc import start
 from typing import Dict
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from fastapi.responses import JSONResponse
+from httpx import get
 
+from app.core.dependencies import get_binance_spot_client, get_etherscan_httpclient, get_scrapper_service
+from app.core.config import app_config
 from app.core.log.logger import Logger
 from app.routes.deposit_route.handler import plan_deposit_handler
 from app.routes.deposit_route.models import DepositPlanResponseModel
 from app.routes.deposit_route.response_config import open_api_config
 import asyncio
+from binance.spot import Spot
+
+from app.routes.scrapper_route.models import TransactionPoolModelRequest
 
 scrapper_route = APIRouter()
 running_tasks: Dict[str,asyncio.Event] = {}
 logger = Logger(name="scrapper_route_controller")
 
+
+
 async def log_request(request: Request) -> None:
     body_info = await request.body()
     logger.info(message={"body": body_info, "headers": request.headers})
+
+
+@scrapper_route.post("/transaction/register")
+async def register_transaction(request: Request, pool_register_request: TransactionPoolModelRequest):
+    await log_request(request)
+    scrapper_client = get_scrapper_service()
+    scrapper_client.register_new_token_pool(
+        pool_name=pool_register_request.pool_name.lower(),
+        contract_address=pool_register_request.pool_address.lower(),
+    )
+
+
+    return JSONResponse(content={"message": "success"})
+
+
+
+
+@scrapper_route.get("/etherscan/tokentx/{pool_address}/latest")
+async def use_etherscan_client(_: Request, pool_address: str) -> JSONResponse:
+    client = get_etherscan_httpclient()
+    response = client.get_latest_token_txs(pool_address)
+    scrapper_client = get_scrapper_service()
+    # scrapper_client.scrape_first_block(address=pool_address)
+    scrapper_client
+
+    return JSONResponse(content=response.model_dump())   
+    
+
+@scrapper_route.get("/etherscan/tokentx/{pool_address}/{start_block}")
+async def use_etherscan_client(_: Request, pool_address: str, start_block: int) -> JSONResponse:
+    client = get_etherscan_httpclient()
+    response = client.get_token_txs_by_start_block(address=pool_address, start_block=start_block)
+
+    scrapper_client = get_scrapper_service()
+    scrapper_client.scrapping_job(address=pool_address, start_block=start_block)
+    # scrapper_client.scrape_first_block(address=pool_address)
+    return JSONResponse(content=response.model_dump())   
+    
+
+
+@scrapper_route.get("/binance/spot/{symbol}/{timestamp}")
+async def use_binance_spot(symbol: str, timestamp: int) -> JSONResponse:
+    scrapper_client = get_scrapper_service()
+    result = scrapper_client.get_closed_price_by_timestamp(symbol=symbol, endTime=timestamp)
+    # print(client.get_klines_by_symbol(
+    #     symbol="ETHUSDT",
+    #     interval="1m",
+    #     limit=1,
+    #     endTime=1729824923000,
+    # ))
+    return JSONResponse(content=result.model_dump())
+
+        
+
+
 
 @scrapper_route.post(
     "/plan/deposit",

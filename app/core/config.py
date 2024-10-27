@@ -14,7 +14,7 @@ from app.core.log.logger import Logger
 class AppConfig(BaseSettings):
     environment: str = "dev"
 
-    # Database
+# Database
     postgres_db_user: str = ""
     postgres_db_password: str = ""
     postgres_db_host: str = ""
@@ -40,6 +40,13 @@ class AppConfig(BaseSettings):
     # Plan Name
     one_time_plan_name: str = "one-time"
     monthly_plan_name: str = "monthly"
+
+    #Binance Spot Base Url
+    binance_spot_base_url: str = "https://testnet.binance.vision"
+
+    #EtherScane Base Url
+    etherscan_base_url: str = "https://api.etherscan.io/api"
+    etherscan_api_key: str = os.environ.get("ETHERSCAN_API_KEY", "")
 
 @lru_cache
 def get_config(
