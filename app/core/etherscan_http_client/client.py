@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 from urllib import response
 
-from app.core.etherscan_http_client.model import EtherscanParams, EtherscanTxResponse
+from app.core.etherscan_http_client.model import EtherscanBlockNumberResponse, EtherscanParams, EtherscanParamsBlockModule, EtherscanParamsProxyModule, EtherscanProxyModuleResponse, EtherscanTxResponse
 from app.core.log.logger import Logger
 from binance.spot import Spot
 
@@ -47,6 +47,24 @@ class EtherscanHttpclient:
             sort="asc"
             )
     
+    def get_default_ts_before_etherscan_params(self) -> EtherscanParamsBlockModule:
+        """
+        Get default latest token transactions etherscan params
+        """
+        return EtherscanParamsBlockModule(
+            timestamp=0,
+            closest="before"
+        )
+    
+    def get_default_ts_after_etherscan_params(self) -> EtherscanParamsBlockModule:
+        """
+        Get default latest token transactions etherscan params
+        """
+        return EtherscanParamsBlockModule(
+            timestamp=0,
+            closest="after"
+        )
+    
     def get_latest_token_txs(
         self,
         address: str,
@@ -68,6 +86,33 @@ class EtherscanHttpclient:
             log_message = f"Description: {description} |Error: {e!s}"
             self.__logger.exception(log_message)
             error_message = "Get latest token transactions failed"
+            raise Exception(error_message) from e
+
+    def get_token_txs_by_start_and_end_block(
+            self,
+            address: str,
+            start_block: int,
+            end_block: int
+    ) -> EtherscanTxResponse:
+        """
+        Get token transactions by start and end block
+        """
+        try:
+            queryParams = self.get_default_start_block_tokentx_etherscan_params()
+            queryParams.address = address
+            queryParams.startblock = start_block
+            queryParams.endblock = end_block
+            queryParams.apikey = self.__api_key
+
+            with self.__http_client.get_session() as session:
+                response_json = self.__http_client.get(session, params=queryParams.model_dump())
+                return EtherscanTxResponse(**response_json)
+
+        except Exception as e:
+            description = "Get token transactions by start and end block failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Get token transactions by start and end block failed"
             raise Exception(error_message) from e
 
     def get_token_txs_by_start_block(
@@ -93,4 +138,58 @@ class EtherscanHttpclient:
             log_message = f"Description: {description} |Error: {e!s}"
             self.__logger.exception(log_message)
             error_message = "Get token transactions by start block failed"
+            raise Exception(error_message) from e
+    
+    def get_closest_block_number_by_start_timestamp(
+            self,
+            timestamp: int
+    ) -> EtherscanBlockNumberResponse:
+        try:
+            queryParams = self.get_default_ts_after_etherscan_params()
+            queryParams.timestamp = timestamp
+            queryParams.apikey = self.__api_key
+            with self.__http_client.get_session() as session:
+                response_json = self.__http_client.get(session, params=queryParams.model_dump())
+                return EtherscanBlockNumberResponse(**response_json)
+        except Exception as e:
+            description = "Get closest block number by start timestamp failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Get closest block number by start timestamp failed"
+            raise Exception(error_message) from e
+        
+    def get_closest_block_number_by_end_timestamp(
+            self,
+            timestamp: int
+    ) -> EtherscanBlockNumberResponse:
+        try:
+            queryParams = self.get_default_ts_before_etherscan_params()
+            queryParams.timestamp = timestamp
+            queryParams.apikey = self.__api_key
+            with self.__http_client.get_session() as session:
+                response_json = self.__http_client.get(session, params=queryParams.model_dump())
+                return EtherscanBlockNumberResponse(**response_json)
+        except Exception as e:
+            description = "Get closest block number by start timestamp failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Get closest block number by start timestamp failed"
+            raise Exception(error_message) from e
+
+    def get_transactipn_reciept_with_tx_hash(
+            self,
+            tx_hash: str
+    ) -> EtherscanProxyModuleResponse:
+        try:
+            queryParams = EtherscanParamsProxyModule()
+            queryParams.txhash = tx_hash
+            queryParams.apikey = self.__api_key
+            with self.__http_client.get_session() as session:
+                response_json = self.__http_client.get(session, params=queryParams.model_dump())
+                return EtherscanProxyModuleResponse(**response_json)
+        except Exception as e:
+            description = "Get transaction receipt with tx hash failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Get transaction receipt with tx hash failed"
             raise Exception(error_message) from e

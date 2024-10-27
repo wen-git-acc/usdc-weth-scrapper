@@ -182,3 +182,32 @@ class TransactionToFromPoolRepository:
             self.__logger.exception(log_message)
             error_message = "Read latest transaction to from pool data by address and pool_id failed"
             raise Exception(error_message) from e
+
+    def get_earliest_transaction_data_by_id(
+            self,
+            pool_id: str,
+    ) -> TransactionToFromPool | None:
+        """
+        Method to get the earliest TransactionToFromPool based on timestamp and pool_id,
+        ordered by created date.
+        """
+        try:
+            with self.__db_session() as session:
+
+                clause_statement_list = [
+                    TransactionToFromPool.pool_id == pool_id
+                ]
+                query_statement = session.query(TransactionToFromPool)
+
+                return (
+                    query_statement.filter(and_(*clause_statement_list))
+                    .order_by(TransactionToFromPool.ts_timestamp.asc())
+                    .first()
+                )
+
+        except Exception as e:
+            description = "Read earliest transaction to from pool data by timestamp and pool_id failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Read earliest transaction to from pool data by timestamp and pool_id failed"
+            raise Exception(error_message) from e

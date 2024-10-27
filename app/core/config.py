@@ -44,9 +44,12 @@ class AppConfig(BaseSettings):
     #Binance Spot Base Url
     binance_spot_base_url: str = "https://testnet.binance.vision"
 
-    #EtherScane Base Url
+    #EtherScan Base Url
     etherscan_base_url: str = "https://api.etherscan.io/api"
     etherscan_api_key: str = os.environ.get("ETHERSCAN_API_KEY", "")
+    
+    #Validator Node Url Provider
+    validator_node_url_provider: str = os.environ.get("VALIDATOR_NODE_URL", "")
 
 @lru_cache
 def get_config(

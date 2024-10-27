@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from web3 import Web3
 from app.core.binance_spot_api.client import BinanceSpotApiClient
 from app.core.etherscan_http_client.client import EtherscanHttpclient
 from app.core.fund_allocator.client import FundAllocatorClient
@@ -48,4 +49,5 @@ def get_scrapper_service() -> ScrapperService:
         etherscan_client=get_etherscan_httpclient(),
         token_pair_pool_repo=get_token_pair_pools_repo(),
         transaction_pool_repo=get_transaction_pool_repo(),
+        web3py= Web3(Web3.HTTPProvider(app_config.validator_node_url_provider)),
     )

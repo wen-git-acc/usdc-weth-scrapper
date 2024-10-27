@@ -1,6 +1,10 @@
 
 
+from datetime import datetime
 from pydantic import BaseModel
+
+from app.core.etherscan_http_client.model import EtherscanTransactionWithUsdtFee
+from app.core.scrapper_service.model import TransactionSwapExecutionPrice
 
 
 
@@ -25,3 +29,25 @@ class TokenPoolPairResponse(BaseModel):
 
 class GeneralResponse(BaseModel):
     message: str = ""
+
+class TimeRangeRequest(BaseModel):
+    pool_name: str
+    start_time: datetime
+    end_time: datetime
+
+class TimeRangeResponse(BaseModel):
+    pool_name: str = ""
+    start_time: str = ""
+    end_time: str = ""
+    success: bool = False
+    transactions: list[EtherscanTransactionWithUsdtFee] = []
+
+class TransactionFeeWithHashResponse(BaseModel):
+    message: str = ""
+    tx_hash: str = ""
+    pool_name: str = ""
+    fee: str = ""
+
+class UniswapUsdcWethExecutionPriceResponse(BaseModel):
+    success: bool = False
+    result: list[TransactionSwapExecutionPrice] = []
