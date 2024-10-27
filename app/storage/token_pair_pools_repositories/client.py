@@ -6,7 +6,7 @@ from sqlalchemy import and_, case
 from sqlalchemy.orm import Session
 
 from app.core.log.logger import Logger
-from app.storage.token_pair_pools_repositories.model import TokenPairPool
+from app.storage.models import TokenPairPool
 
 
 
@@ -68,6 +68,27 @@ class TokenPairPoolsRepository:
             self.__logger.exception(log_message)
             error_message = "Read token pair pool data by address failed"
             raise Exception(error_message) from e
+        
+    def get_token_pool_pair_by_pool_name(
+        self, pool_name: str
+    ) -> list[TokenPairPool] | None:
+        """
+        Method to read TokenPairPool based on pool_name.
+        """
+        try:
+            with self.__db_session() as session:
+                return (
+                    session.query(TokenPairPool)
+                    .filter(TokenPairPool.pool_name == pool_name)
+                    .all()
+                )
+        except Exception as e:
+            description = "Read token pair pool data by pool_name failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Read token pair pool data by pool_name failed"
+            raise Exception(error_message) from e
+    
 
     def read_token_pool_pair_data_by_id(
         self, ids: list[int]
@@ -101,3 +122,23 @@ class TokenPairPoolsRepository:
             self.__logger.exception(log_message)
             error_message = "Read token pair pool data by id failed"
             raise Exception(error_message) from e
+
+    def read_all_token_pool_pairs (
+        self
+    ) -> list[TokenPairPool] | None:
+        """
+        Method to read all TokenPairPool.
+        """
+        try:
+            with self.__db_session() as session:
+                return (
+                    session.query(TokenPairPool)
+                    .all()
+                )
+        except Exception as e:
+            description = "Read all token pair pool data failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            error_message = "Read all token pair pool data failed"
+            raise Exception(error_message) from e
+    

@@ -8,6 +8,9 @@ from sqlalchemy.pool import QueuePool
 
 from app.core.config import app_config
 
+from app.storage.models import Base as TransactionToFromPoolBase
+from app.storage.models import Base as TokenPairPoolBase
+
 # Replace with your actual configuration
 DATABASE_URL = f"postgresql+psycopg2://{app_config.postgres_db_user}:{app_config.postgres_db_password}@{app_config.postgres_db_host}:{app_config.postgres_db_port}/{app_config.postgres_db_name}"
 
@@ -19,6 +22,9 @@ engine = create_engine(
     pool_timeout=app_config.postgres_pool_timeout,  # Specifies the number of seconds to wait before giving a connection pool timeout error
     pool_recycle=app_config.postgres_pool_recycle,  # Number of seconds a connection can persist before being recycled. Helps in handling DBAPI connections that are inactive on the server side.
 )
+
+TokenPairPoolBase.metadata.create_all(bind=engine)
+TransactionToFromPoolBase.metadata.create_all(bind=engine)
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 

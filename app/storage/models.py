@@ -4,12 +4,19 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+class TokenPairPool(Base):
+    __tablename__ = 'token_pair_pools'
+    
+    pool_id = Column(Integer, primary_key=True, autoincrement=True)
+    pool_name = Column(String(255), unique=True, nullable=False)
+    contract_address = Column(String(42), unique=True, nullable=False)
+
 class TransactionToFromPool(Base):
     __tablename__ = 'transactions_to_from_pools'
     
     transaction_id = Column(Integer, primary_key=True, autoincrement=True)
-    block_number = Column(String, nullable=False)
-    ts_timestamp = Column(String, nullable=False)
+    block_number = Column(BigInteger, nullable=False)
+    ts_timestamp = Column(BigInteger, nullable=False)
     tx_hash = Column(String, unique=True, nullable=False)
     from_address = Column(String, nullable=False)
     to_address = Column(String, nullable=False)
@@ -36,3 +43,5 @@ class TransactionToFromPool(Base):
                 f"tx_hash={self.tx_hash}, from_address={self.from_address}, "
                 f"to_address={self.to_address}, token_value={self.token_value}, "
                 f"transaction_fee_usdt={self.transaction_fee_usdt})>")
+
+

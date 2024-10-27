@@ -9,9 +9,9 @@ from app.core.etherscan_http_client.model import EtherscanTransaction
 from app.core.scrapper_service.model import ClosedPriceResult, TransactionFeeCalcResult
 from app.core.log.logger import Logger
 from app.storage.token_pair_pools_repositories.client import TokenPairPoolsRepository
-from app.storage.token_pair_pools_repositories.model import TokenPairPool
+from app.storage.models import TokenPairPool
 from app.storage.transactions_to_from_pools_repositories.client import TransactionToFromPoolRepository
-from app.storage.transactions_to_from_pools_repositories.model import TransactionToFromPool
+from app.storage.models import TransactionToFromPool
 
 
 class ScrapperService:
@@ -80,11 +80,11 @@ class ScrapperService:
             transaction_fee=str(transaction_fee_in_usdt)
         )
     
-    def scrapping_job(self, address: str, start_block: int) -> list[TransactionFeeCalcResult]:
+    def scrapping_job(self, address: str, start_block: int, pool_id: int) -> list[TransactionFeeCalcResult]:
         """transaction will ignore first block and duplicate block."""
         
         token_txs = self.get_token_txs_by_start_block(address, start_block)
-        result = []
+        transaction_to_be_insert: list[TransactionToFromPool] = []
         processed_transactions = set()
         for tx in token_txs:
             if tx.blockNumber == str(start_block):
@@ -94,24 +94,118 @@ class ScrapperService:
                 continue
             processed_transactions.add(tx.hash)
             transaction_fee = self.calculate_transaction_fee_in_usdt(tx)
-            result.append(transaction_fee)
+            transformed_tx = self.convert_etherTx_to_transaction_repo(
+                tx=tx,
+                pool_id=pool_id,
+                usdt_fee=transaction_fee.transaction_fee
+            )
+            transaction_to_be_insert.append(transformed_tx)
 
+        self.__transaction_pool_repo.insert_transaction_to_from_pool_data(transaction_to_be_insert)
         return result
     
-    def scrape_first_block(self, address: str) -> None:
+    
+    def scrape_first_block(self, address: str, token_pool_pair_id: int) -> None:
         token_txs = self.get_latest_token_txs(address)
         if len(token_txs) == 0:
             return
         
         first_block_tx = token_txs[0]
+        # get_latest = self.__transaction_pool_repo.get_latest_transaction_data_by_to_from_address_with_id(
+        #     address=address,
+        #     pool_id=token_pool_pair_id
+        # )
 
         transaction_fee = self.calculate_transaction_fee_in_usdt(first_block_tx)    
-        transaction_repo = self.convert_etherTx_to_transaction_repo(first_block_tx, transaction_fee.transaction_fee)
 
-        self.__transaction_pool_repo.insert_transaction_to_from_pool_data([transaction_repo])
-        # first_block = token_txs[0].blockNumber
-        # self.scrapping_job(address, first_block)
+        transform_first_block_tx = self.convert_etherTx_to_transaction_repo(
+            tx=first_block_tx,
+            pool_id=token_pool_pair_id,
+            usdt_fee=transaction_fee.transaction_fee
+        )
 
+        self.__transaction_pool_repo.insert_first_transaction_to_from_pool_data([transform_first_block_tx])
+
+    def insert_new_latest_transaction_pool(self, address: str, token_pool_pair_id: int) -> bool:
+        try:
+            token_txs = self.get_latest_token_txs(address)
+            if len(token_txs) == 0:
+                return False
+            
+            first_block_tx = token_txs[0]
+
+            transaction_fee = self.calculate_transaction_fee_in_usdt(first_block_tx)    
+
+            transform_first_block_tx = self.convert_etherTx_to_transaction_repo(
+                tx=first_block_tx,
+                pool_id=token_pool_pair_id,
+                usdt_fee=transaction_fee.transaction_fee
+            )
+
+            self.__transaction_pool_repo.insert_first_transaction_to_from_pool_data([transform_first_block_tx])
+
+            return True
+
+        except Exception as e:
+            description = "Insert new latest transaction pool failed"
+            log_message = f"Description: {description} |Error: {e!s}"
+            self.__logger.exception(log_message)
+            return False
+
+
+ 
+    # def scrape_job(self, address: str) -> None:
+    #     poolData = self.get_token_pool_pair_by_address(address)
+
+    #     if len(poolData) == 0:
+    #         raise Exception("Pool not found")
+        
+    #     pool_id = poolData[0].pool_id
+
+    #     existing_list = self.__transaction_pool_repo.read_transaction_data_by_to_from_address(
+    #         address=address,
+    #         pool_id=pool_id
+    #     )
+
+    #     if len(existing_list) == 0:
+    #         return self.insert_new_latest_transaction_pool(address, pool_id)
+        
+    #     else
+
+
+
+    #     return
+
+    def read_latest_transaction_pool(self, address: str, token_pool_pair_id: int) -> TransactionToFromPool | None:
+        latest = self.__transaction_pool_repo.get_latest_transaction_data_by_to_from_address_with_id(
+            address=address,
+            pool_id=token_pool_pair_id
+        )
+        return latest
+
+    def get_all_token_pool_pair(self) -> list[TokenPairPool]:
+        all_token_pool_pair = self.__token_pair_pool_repo.read_all_token_pool_pairs()
+
+        if len(all_token_pool_pair) == 0:
+            return []
+        
+        return all_token_pool_pair
+    
+    def get_token_pool_pair_by_address(self, address: str) -> list[TokenPairPool]:
+        token_pool_pair = self.__token_pair_pool_repo.read_token_pool_pair_by_address(address)
+
+        if len(token_pool_pair) == 0:
+            return []
+        
+        return token_pool_pair
+
+    def get_token_pool_pair_by_pool_name(self, pool_name: str) -> list[TokenPairPool]:
+        token_pool_pair = self.__token_pair_pool_repo.get_token_pool_pair_by_pool_name(pool_name)
+
+        if len(token_pool_pair) == 0:
+            return []
+        
+        return token_pool_pair
 
     def register_new_token_pool(self, pool_name:str, contract_address: str) -> None:
         token_pair_pool_data = TokenPairPool(
@@ -122,10 +216,10 @@ class ScrapperService:
     
 
 
-    def convert_etherTx_to_transaction_repo(self, tx: EtherscanTransaction, usdt_fee: str) -> TransactionToFromPool:
+    def convert_etherTx_to_transaction_repo(self, tx: EtherscanTransaction, pool_id: int, usdt_fee: str) -> TransactionToFromPool:
         return TransactionToFromPool(
-            block_number=tx.blockNumber,
-            ts_timestamp=tx.timeStamp,
+            block_number=int(tx.blockNumber),
+            ts_timestamp=int(tx.timeStamp),
             tx_hash=tx.hash,
             from_address=tx.from_,
             to_address=tx.to,
@@ -141,4 +235,5 @@ class ScrapperService:
             cumulative_gas_used=tx.cumulativeGasUsed,
             confirmations=tx.confirmations,
             transaction_fee_usdt=usdt_fee,
+            pool_id=pool_id,
         )
