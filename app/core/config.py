@@ -51,6 +51,10 @@ class AppConfig(BaseSettings):
     #Validator Node Url Provider
     validator_node_url_provider: str = os.environ.get("VALIDATOR_NODE_URL", "")
 
+    #Scrapping Job Config
+    scrapping_job_interval_seconds: int = 10
+    scrapping_job_max_count_per_interval: int = 20
+
 @lru_cache
 def get_config(
     environment: str = os.environ.get("ENVIRONMENT", "dev"),

@@ -75,6 +75,9 @@ class ScrapperService:
             )
             transaction_to_be_insert.append(transformed_tx)
 
+            if len(transaction_to_be_insert) == app_config.scrapping_job_max_count_per_interval:
+                break
+
         self.__transaction_pool_repo.insert_transaction_to_from_pool_data(transaction_to_be_insert)
         return True
     

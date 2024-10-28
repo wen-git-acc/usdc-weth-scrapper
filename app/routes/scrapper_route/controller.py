@@ -1,5 +1,5 @@
 from typing import Dict
-from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Request, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 
 from app.core.dependencies import get_scrapper_service
@@ -9,6 +9,7 @@ import asyncio
 
 from app.routes.scrapper_route.models import GeneralResponse, TimeRangeRequest, TimeRangeResponse, TokenPairPoolSchema, TokenPoolPairResponse, TransactionFeeWithHashResponse, TransactionPoolModelRequest, UniswapUsdcWethExecutionPriceResponse
 from app.storage.models import TransactionToFromPool
+from app.core.config import app_config
 
 
 scrapper_route = APIRouter()
@@ -101,7 +102,7 @@ async def scrape_transactions(transaction_pair: str, stop_event: asyncio.Event) 
             print(f"Transaction Pair: {transaction_pair},Latest block: {latest_tx.block_number}")
             start_block = latest_tx.block_number
             scrapper_client.scrapping_job(address=address, start_block=start_block, pool_id=pool_id)
-            await asyncio.sleep(10)  # Simulate scraping delay
+            await asyncio.sleep(app_config.scrapping_job_interval_seconds)  # Simulate scraping delay
 
     print(f"Stopped scraping for {transaction_pair}.")
 
