@@ -1,11 +1,15 @@
 from contextlib import contextmanager
 from typing import Generator
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from app.core.config import app_config
+
+from app.storage.models import Base as TransactionToFromPoolBase
+from app.storage.models import Base as TokenPairPoolBase
 
 # Replace with your actual configuration
 DATABASE_URL = f"postgresql+psycopg2://{app_config.postgres_db_user}:{app_config.postgres_db_password}@{app_config.postgres_db_host}:{app_config.postgres_db_port}/{app_config.postgres_db_name}"
@@ -19,6 +23,9 @@ engine = create_engine(
     pool_recycle=app_config.postgres_pool_recycle,  # Number of seconds a connection can persist before being recycled. Helps in handling DBAPI connections that are inactive on the server side.
 )
 
+TokenPairPoolBase.metadata.create_all(bind=engine)
+TransactionToFromPoolBase.metadata.create_all(bind=engine)
+
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
@@ -28,6 +35,10 @@ def get_session() -> Generator[Session, None, None]:
     try:
         db.begin()
         yield db
+    except IntegrityError as e:
+        # Roll back the session to avoid any invalid state
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         error_message = "db operation failed, rollback."

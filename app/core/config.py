@@ -14,7 +14,7 @@ from app.core.log.logger import Logger
 class AppConfig(BaseSettings):
     environment: str = "dev"
 
-    # Database
+# Database
     postgres_db_user: str = ""
     postgres_db_password: str = ""
     postgres_db_host: str = ""
@@ -40,6 +40,20 @@ class AppConfig(BaseSettings):
     # Plan Name
     one_time_plan_name: str = "one-time"
     monthly_plan_name: str = "monthly"
+
+    #Binance Spot Base Url
+    binance_spot_base_url: str = "https://testnet.binance.vision"
+
+    #EtherScan Base Url
+    etherscan_base_url: str = "https://api.etherscan.io/api"
+    etherscan_api_key: str = os.environ.get("ETHERSCAN_API_KEY", "")
+    
+    #Validator Node Url Provider
+    validator_node_url_provider: str = os.environ.get("VALIDATOR_NODE_URL", "")
+
+    #Scrapping Job Config
+    scrapping_job_interval_seconds: int = 10
+    scrapping_job_max_count_per_interval: int = 20
 
 @lru_cache
 def get_config(
