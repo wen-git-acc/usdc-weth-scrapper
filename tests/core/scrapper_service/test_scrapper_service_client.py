@@ -888,7 +888,6 @@ def test_get_decode_uniswap_v3_executed_price() -> None:
     result_list = client.get_decode_uniswap_v3_executed_price(tx_hash=tx_hash, contract_address=contract_address)
     assert len(result_list) > 0
     result = result_list[0]
-
     assert result.transaction_hash == tx_hash
     assert result.execution_price == "{:.2f}".format(float(expected_execution_price))
     assert result.amount0 == str(amount0)
