@@ -179,3 +179,12 @@ $ ./scripts/db.sh --create
 # Run migrations
 $ ./scripts/db.sh --up
 ```
+
+
+## Additional infor 
+- Implemented client for etherscan and binance 
+- Completed required feature of reading fee based on txhash
+- Completed required feature on start record when instance is up.
+- Completed required feature to retrieve past tx data based on timerange with usdt calculated.
+- Completed additional feature to calcualte executed price for usdc/weth swap.
+- System is design to be able to store more than 1 pool pairs for scalability
