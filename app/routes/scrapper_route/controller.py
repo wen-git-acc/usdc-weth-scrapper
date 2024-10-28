@@ -1,27 +1,15 @@
-from atexit import register
-from re import A
-from time import sleep
-from tracemalloc import start
 from typing import Dict
-from xml.dom.domreg import registered
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from fastapi.responses import JSONResponse
-from httpx import get
 
-from app.core.dependencies import get_binance_spot_client, get_etherscan_httpclient, get_scrapper_service
-from app.core.config import app_config
+from app.core.dependencies import get_scrapper_service
 from app.core.log.logger import Logger
-from app.core.scrapper_service.model import TransactionSwapExecutionPrice
-from app.routes.deposit_route.handler import plan_deposit_handler
-from app.routes.deposit_route.models import DepositPlanResponseModel
-from app.routes.deposit_route.response_config import open_api_config
+
 import asyncio
-from binance.spot import Spot
 
 from app.routes.scrapper_route.models import GeneralResponse, TimeRangeRequest, TimeRangeResponse, TokenPairPoolSchema, TokenPoolPairResponse, TransactionFeeWithHashResponse, TransactionPoolModelRequest, UniswapUsdcWethExecutionPriceResponse
 from app.storage.models import TransactionToFromPool
-from datetime import datetime, timezone
-from pydantic import BaseModel
+
 
 scrapper_route = APIRouter()
 running_tasks: Dict[str,asyncio.Event] = {}
@@ -71,61 +59,6 @@ async def register_transaction(request: Request, pool_register_request: Transact
     except Exception as e:
         return JSONResponse(content={"message": f"No duplicate pool name and addrss allowed. {e!s}"}, status_code=500)
     
-
-
-
-
-# @scrapper_route.get("/etherscan/tokentx/{pool_address}/latest")
-# async def use_etherscan_client(_: Request, pool_address: str) -> JSONResponse:
-#     # scrape_transactions_V2("uniswap/usdc/weth", asyncio.Event())
-#     client = get_etherscan_httpclient()
-#     response = client.get_latest_token_txs(pool_address)
-#     scrapper_client = get_scrapper_service()
-#     poolData = scrapper_client.get_token_pool_pair_by_address(pool_address)
-
-#     if len(poolData) == 0:
-#         return JSONResponse(content={"message": "pool not found"})
-    
-#     poolId = poolData[0].pool_id
-
-
-#     latest = scrapper_client.read_latest_transaction_pool(pool_address, poolId)
-
-#     # scrapper_client.scrape_first_block(
-#     #     address=pool_address, 
-#     #     token_pool_pair_id=poolId
-#     #     )
-
-#     # scrapper_client.scrape_job(address=pool_address)
-#     return JSONResponse(content=response.model_dump())   
-    
-
-
-# @scrapper_route.get("/etherscan/tokentx/{pool_address}/{start_block}")
-# async def use_etherscan_client(_: Request, pool_address: str, start_block: int) -> JSONResponse:
-#     client = get_etherscan_httpclient()
-#     response = client.get_token_txs_by_start_block(address=pool_address, start_block=start_block)
-
-#     scrapper_client = get_scrapper_service()
-#     scrapper_client.scrapping_job(address=pool_address, start_block=start_block)
-#     # scrapper_client.scrape_first_block(address=pool_address)
-#     return JSONResponse(content=response.model_dump())   
-    
-
-
-# @scrapper_route.get("/binance/spot/{symbol}/{timestamp}")
-# async def use_binance_spot(symbol: str, timestamp: int) -> JSONResponse:
-#     scrapper_client = get_scrapper_service()
-#     result = scrapper_client.get_closed_price_by_timestamp(symbol=symbol, endTime=timestamp)
-#     # print(client.get_klines_by_symbol(
-#     #     symbol="ETHUSDT",
-#     #     interval="1m",
-#     #     limit=1,
-#     #     endTime=1729824923000,
-#     # ))
-#     return JSONResponse(content=result.model_dump())
-
-        
 
 async def scrape_transactions(transaction_pair: str, stop_event: asyncio.Event) -> None:
     """
@@ -244,7 +177,7 @@ async def get_transactions_in_time_range(request: Request, time_range_request: T
 
         return JSONResponse(content=result.model_dump())
 
-    except Exception as e:
+    except Exception as _:
         return JSONResponse(content=result.model_dump(), status_code=404)
     
 
@@ -277,6 +210,10 @@ async def get_uniswap_executed_price(request: Request, tx_hash: str, pool_name: 
         if len(pool_data) == 0:
             return JSONResponse(content={"message": "Pool not found"}, status_code=404)
         pool_address = pool_data[0].contract_address
+
+        if pool_address != "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640":
+            return JSONResponse(content={"message": "This endpoint currently only support uniswap_v3 (usdc/weth) pool"}, status_code=404)
+
         result = scrapper_client.get_decode_uniswap_v3_executed_price(tx_hash, pool_address)
         response = UniswapUsdcWethExecutionPriceResponse(
             success=True,
