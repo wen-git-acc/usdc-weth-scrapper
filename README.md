@@ -139,25 +139,28 @@ $ make help
 
 ```json
 {
-  "version": "0.2.0",
-  "configurations": [
-      {
-          "name": "Debug App",
-          "type": "debugpy",
-          "request": "launch",
-          "module": "uvicorn",
-          "args": [
-              "app.server:app",
-              "--host",
-              "0.0.0.0",
-              "--port",
-              "8088",
-              "--reload"
-          ],
-          "env": {}
-      }
-  ]
-}
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug App",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.server:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8088",
+                "--reload"
+            ],
+            "env": {
+                "ETHERSCAN_API_KEY": "",
+                "VALIDATOR_NODE_URL": "",
+            }
+        }
+    ]
+  }
 ```
 3. Add the following testing configuration to `settings.json` user/workspace/default
 
