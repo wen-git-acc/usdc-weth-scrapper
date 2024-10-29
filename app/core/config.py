@@ -15,8 +15,8 @@ class AppConfig(BaseSettings):
     environment: str = "dev"
 
 # Database
-    postgres_db_user: str = ""
-    postgres_db_password: str = ""
+    postgres_db_user: str = os.environ.get("POSTGRES_DB_USER", "")
+    postgres_db_password: str = os.environ.get("POSTGRES_DB_PASSWORD", "")
     postgres_db_host: str = ""
     postgres_db_port: int = 0
     postgres_db_name: str = ""
@@ -25,21 +25,8 @@ class AppConfig(BaseSettings):
     postgres_pool_timeout: int = 0
     postgres_pool_recycle: int = 0
 
-    # Secret get from environment.
-    testing: str = os.environ.get("TESTING", "false")
-
     # Logging: DEBUG, INFO, WARNING, ERROR, EXCEPTION
     log_level: str = ""
-
-    # Auth settings
-    auth_mode: str = ""
-    auth_login_redirect: str = ""
-
-    knowledge_base_default_query_limit: int = 0
-
-    # Plan Name
-    one_time_plan_name: str = "one-time"
-    monthly_plan_name: str = "monthly"
 
     #Binance Spot Base Url
     binance_spot_base_url: str = "https://testnet.binance.vision"
@@ -63,24 +50,6 @@ def get_config(
     # parser will be used to contain the main overall rendered config
     parser = ConfigParser(interpolation=ExtendedInterpolation())
 
-    # # read raw secret value first
-    # secret_parser = ConfigParser(interpolation=ExtendedInterpolation())
-    # _ = secret_parser.read(
-    #     [Path(secret_init_path)],
-    #     encoding="utf-8",
-    # )
-
-    # # special character $ must be escaped for use in extended interpolation later with overall config
-    # secret_sections = secret_parser.sections()
-    # for section in secret_sections:
-    #     section_items = dict(secret_parser.items(section, raw=True))
-    #     parser.add_section(section)
-    #     for key, value in section_items.items():
-    #         safe_value = value.replace("$", "$$")
-    #         # we set the safe secret value for later extended interpolation reference
-    #         parser.set(section, key, safe_value)
-
-    # read and render the main config
     config_paths = parser.read(
         [Path("configs/" + environment + ".ini")],
         encoding="utf-8",
