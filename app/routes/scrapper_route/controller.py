@@ -121,7 +121,7 @@ async def start_task(transaction_pair: str, background_tasks: BackgroundTasks):
     
     # Create an asyncio Event to control task stopping
     stop_event = asyncio.Event()
-    running_tasks[transaction_pair] = stop_event
+    running_tasks[transaction_pair.lower().strip()] = stop_event
     background_tasks.add_task(scrape_transactions, transaction_pair, stop_event)
     return GeneralResponse(
         message=f"Started task for {transaction_pair}"
@@ -130,13 +130,13 @@ async def start_task(transaction_pair: str, background_tasks: BackgroundTasks):
 @scrapper_route.post("/stop-task/{transaction_pair}",
                      response_model=GeneralResponse)
 async def stop_task(transaction_pair: str):
-    stop_event = running_tasks.get(transaction_pair)
+    stop_event = running_tasks.get(transaction_pair.lower().strip())
     if not stop_event:
         raise HTTPException(status_code=404, detail="Task not found for this pair.")
 
     # Signal the task to stop
     stop_event.set()
-    del running_tasks[transaction_pair]
+    del running_tasks[transaction_pair.lower().strip()]
     return GeneralResponse(
         message=f"Stopped task for {transaction_pair}"
     )

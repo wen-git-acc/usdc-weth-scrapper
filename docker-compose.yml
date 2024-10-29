@@ -7,7 +7,9 @@ services:
     ports:
       - "8088:8088"  # Map port 8088 on the host to port 80 in the container
     environment:
-      ETHERSCAN_API_KEY: ""
-      VALIDATOR_NODE_URL: "https://eth-mainnet.g.alchemy.com/v2/"
+      ETHERSCAN_API_KEY: "{api_key}"
+      VALIDATOR_NODE_URL: "https://eth-mainnet.g.alchemy.com/v2/{api_key}"
+      POSTGRES_DB_PASSWORD: ""
+      POSTGRES_DB_USER: ""
 
 
