@@ -179,3 +179,8 @@ $ ./scripts/db.sh --create
 # Run migrations
 $ ./scripts/db.sh --up
 ```
+
+
+## Docker setup
+Remember to pass in your system user for dbhost and password else sqlalchemypkg container will use root user default to connect to db
+If not running in container, switch host back to local host.

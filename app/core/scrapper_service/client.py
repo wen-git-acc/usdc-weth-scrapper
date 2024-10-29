@@ -1,7 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
 import decimal
-from lib2to3.pgen2 import token
 from typing import Any, Dict, Optional, Tuple, Union
 from unittest import result
 from hexbytes import HexBytes

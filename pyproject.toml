@@ -40,13 +40,13 @@ pandas = "^2.2.2"
 redis = "^5.0.6"
 binance-connector = "^3.9.0"
 web3 = "^7.4.0"
+uvicorn = "^0.32.0"
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
 pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 ruff = "*"
-uvicorn = "*"
 
 [tool.isort]
 # compatible with psf/black

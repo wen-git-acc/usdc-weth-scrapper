@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  usdc-weth-scrapper:
+    image: usdc-weth-scrapper:latest  # Replace with your application image
+    build: .  # Path to your Dockerfile (if needed)
+    ports:
+      - "8088:8088"  # Map port 8088 on the host to port 80 in the container
+    environment:
+      TESTING: "postgresql://postgres:@db:5432/mydatabase"  # Adjust as necessary
+
+
