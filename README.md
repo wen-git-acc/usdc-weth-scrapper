@@ -157,6 +157,8 @@ $ make help
             "env": {
                 "ETHERSCAN_API_KEY": "",
                 "VALIDATOR_NODE_URL": "",
+                "POSTGRES_DB_PASSWORD": "",
+                "POSTGRES_DB_USER":"",
             }
         }
     ]

@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 from web3 import Web3
 from app.core.binance_spot_api.client import BinanceSpotApiClient
 from app.core.etherscan_http_client.client import EtherscanHttpclient
-from app.core.fund_allocator.client import FundAllocatorClient
-from app.core.helper.client import HelperClient
+
 from app.core.scrapper_service.client import ScrapperService
 from app.storage.connection import get_session
 from binance.spot import Spot
@@ -14,15 +13,10 @@ from app.utils.http_client.client import ether_scan_client
 
 
 
-# Singleton
-helper_client = HelperClient()
 
 # Scoped
 def get_db_session() -> Session:
     return get_session()
-
-def get_fund_allocator_client() -> FundAllocatorClient:
-    return FundAllocatorClient(helper_client=helper_client)
 
 def get_token_pair_pools_repo() -> TokenPairPoolsRepository:
     return TokenPairPoolsRepository(db_session=get_db_session)
