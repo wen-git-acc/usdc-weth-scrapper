@@ -26,16 +26,19 @@ async def log_request(request: Request) -> None:
 @scrapper_route.get("/transaction/pool/existing",
                      response_model=TokenPoolPairResponse)
 async def get_existing_transaction_pools(request: Request):
-    await log_request(request)
-    response = TokenPoolPairResponse()
-    scrapper_client = get_scrapper_service()
-    result = scrapper_client.get_all_token_pool_pair()
-    registered_pool = []
-    for pool in result:
-        registered_pool.append(TokenPairPoolSchema.model_validate(pool.__dict__))
-    response.regitered_pool = registered_pool
-    response.success = True
-    return JSONResponse(content=response.model_dump())
+    try:
+        await log_request(request)
+        response = TokenPoolPairResponse()
+        scrapper_client = get_scrapper_service()
+        result = scrapper_client.get_all_token_pool_pair()
+        registered_pool = []
+        for pool in result:
+            registered_pool.append(TokenPairPoolSchema.model_validate(pool.__dict__))
+        response.regitered_pool = registered_pool
+        response.success = True
+        return JSONResponse(content=response.model_dump())
+    except Exception as e:
+        return JSONResponse(content={"message": f"Error: {e!s}"}, status_code=404)
 
 
 @scrapper_route.post("/transaction/pool/register",
@@ -63,7 +66,7 @@ async def register_transaction(request: Request, pool_register_request: Transact
 
 async def scrape_transactions(transaction_pair: str, stop_event: asyncio.Event) -> None:
     """
-    This is the main function executed by the backgroudn tasks.
+    This is the main function executed by the background tasks.
     """
     scrapper_client = get_scrapper_service()
     poolData = scrapper_client.get_token_pool_pair_by_pool_name(transaction_pair)
@@ -110,22 +113,27 @@ async def scrape_transactions(transaction_pair: str, stop_event: asyncio.Event) 
 @scrapper_route.post("/start-task/{transaction_pair}",
                      response_model=GeneralResponse)
 async def start_task(transaction_pair: str, background_tasks: BackgroundTasks):
-    if transaction_pair in running_tasks:
-        return {"message": f"Task for {transaction_pair} is already running."}
-    
-    scrapper_client = get_scrapper_service()
-    poolData = scrapper_client.get_token_pool_pair_by_pool_name(transaction_pair)
 
-    if len(poolData) == 0:
-        return JSONResponse(content={"message": "Pool not found"}, status_code=404)
-    
-    # Create an asyncio Event to control task stopping
-    stop_event = asyncio.Event()
-    running_tasks[transaction_pair.lower().strip()] = stop_event
-    background_tasks.add_task(scrape_transactions, transaction_pair, stop_event)
-    return GeneralResponse(
-        message=f"Started task for {transaction_pair}"
-    )
+    try:
+        if transaction_pair in running_tasks:
+            return {"message": f"Task for {transaction_pair} is already running."}
+        
+        scrapper_client = get_scrapper_service()
+        poolData = scrapper_client.get_token_pool_pair_by_pool_name(transaction_pair)
+
+        if len(poolData) == 0:
+            return JSONResponse(content={"message": "Pool not found"}, status_code=404)
+        
+        # Create an asyncio Event to control task stopping
+        stop_event = asyncio.Event()
+        running_tasks[transaction_pair.lower().strip()] = stop_event
+        background_tasks.add_task(scrape_transactions, transaction_pair, stop_event)
+        return GeneralResponse(
+            message=f"Started task for {transaction_pair}"
+        )
+    except Exception as e:
+        return JSONResponse(content={"message": f"Error: {e!s}"}, status_code=404)
+
 
 @scrapper_route.post("/stop-task/{transaction_pair}",
                      response_model=GeneralResponse)
